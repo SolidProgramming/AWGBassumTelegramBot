@@ -1,8 +1,10 @@
-﻿namespace AWGBassumTelegramBot.Interfaces
+﻿using Ical.Net.CalendarComponents;
+
+namespace AWGBassumTelegramBot.Interfaces
 {
     public interface ICalendarScrapingService
     {
         Task<string> ScrapeCalendarAsync(string calendarUrl);
-        Task ProcessCalendarDataAsync(string calendarData);
+        List<CalendarEvent>? GetFutureCalendarEvents(string calendarData);
     }
 }

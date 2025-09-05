@@ -20,7 +20,7 @@ builder.Services.Configure<AppSettings>(
 // Register HTTP client
 builder.Services.AddHttpClient<CalendarScrapingService>((serviceProvider, client) =>
 {
-    var settings = serviceProvider.GetRequiredService<IOptions<AppSettings>>().Value;
+    AppSettings settings = serviceProvider.GetRequiredService<IOptions<AppSettings>>().Value;
     client.Timeout = TimeSpan.FromSeconds(settings.TimeoutSeconds);
     client.DefaultRequestHeaders.Add("User-Agent", settings.UserAgent);
 });
