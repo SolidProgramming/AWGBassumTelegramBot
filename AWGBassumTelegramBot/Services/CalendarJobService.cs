@@ -15,7 +15,19 @@ namespace AWGBassumTelegramBot.Services
                 string calendarData = await calendarScrapingService.ScrapeCalendarAsync(calendarUrl);
                 List<CalendarEvent>? futureEvents = calendarScrapingService.GetFutureCalendarEvents(calendarData);
 
+                DateTime nextDay = DateTime.UtcNow.Date.AddDays(1);
 
+                bool hasEventNextDay = futureEvents != null && futureEvents.Any(e =>
+                    e.Start != null && e.Start.AsUtc.Date == nextDay);
+
+                if(hasEventNextDay)
+                {
+                    logger.LogInformation("There is at least one calendar event on the next day: {NextDay}", nextDay);
+                }
+                else
+                {
+                    logger.LogInformation("No calendar events found for the next day: {NextDay}", nextDay);
+                }
 
                 logger.LogInformation("Calendar scrape job completed successfully");
             }

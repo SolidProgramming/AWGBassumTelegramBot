@@ -51,7 +51,7 @@ namespace AWGBassumTelegramBot.Services
                 List<CalendarEvent> futureEvents = [];
 
                 DateTime now = DateTime.UtcNow;
-                System.Globalization.CultureInfo culture = new System.Globalization.CultureInfo(calendarConfig.Value.CalendarLocale);
+                System.Globalization.CultureInfo culture = new(calendarConfig.Value.CalendarLocale);
 
                 foreach(CalendarEvent calendarEvent in calendar.Events)
                 {
@@ -62,7 +62,7 @@ namespace AWGBassumTelegramBot.Services
 
                         string formattedTime = calendarEvent.Start.Value.ToString(culture);
 
-                        logger.LogInformation("Future event: {EventSummary} at {EventStart}", calendarEvent.Summary, formattedTime);
+                        logger.LogDebug("Future event: {EventSummary} at {EventStart}", calendarEvent.Summary, formattedTime);
                     }
                 }
 
