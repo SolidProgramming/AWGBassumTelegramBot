@@ -22,12 +22,12 @@ builder.Services.AddHttpClient<CalendarScrapingService>((serviceProvider, client
 {
     AppSettings settings = serviceProvider.GetRequiredService<IOptions<AppSettings>>().Value;
     client.Timeout = TimeSpan.FromSeconds(settings.TimeoutSeconds);
-    client.DefaultRequestHeaders.Add("User-Agent", settings.UserAgent);
 });
 
 // Register services
 builder.Services.AddScoped<ICalendarScrapingService, CalendarScrapingService>();
 builder.Services.AddScoped<ICalendarJobService, CalendarJobService>();
+builder.Services.AddScoped<ITelegramNotificationService, TelegramNotificationService>();
 
 // Configure Hangfire
 builder.Services.AddHangfire(configuration => configuration
@@ -45,16 +45,23 @@ IHostApplicationLifetime lifetime = app.Services.GetRequiredService<IHostApplica
 lifetime.ApplicationStarted.Register(() =>
 {
     ICalendarJobService jobService = app.Services.GetRequiredService<ICalendarJobService>();
-    IOptions<AppSettings> appSettings = app.Services.GetRequiredService<IOptions<AppSettings>>();
+    IOptions<AppSettings> settings = app.Services.GetRequiredService<IOptions<AppSettings>>();
 
-    string calendarUrl = appSettings.Value.CalendarUrl;
-    string cronExpression = appSettings.Value.CronExpression;
-
-    if (!string.IsNullOrEmpty(calendarUrl))
+    if (IsValidUrl(settings.Value.CalendarUrl))
     {
-        jobService.ScheduleRecurringCalendarScrape(calendarUrl, cronExpression);
-        BackgroundJob.Enqueue(() => jobService.ExecuteCalendarScrapeJobAsync(calendarUrl));
+        jobService.ScheduleRecurringCalendarScrape(Cron.Daily());
+        BackgroundJob.Enqueue(() => jobService.ExecuteCalendarScrapeJobAsync());
     }
 });
 
 await app.RunAsync();
+
+static bool IsValidUrl(string url)
+{
+    if (string.IsNullOrWhiteSpace(url))
+        return false;
+
+    return Uri.TryCreate(url, UriKind.Absolute, out Uri? result)
+           && !string.IsNullOrEmpty(result.Host)
+           && (result.Scheme == Uri.UriSchemeHttp || result.Scheme == Uri.UriSchemeHttps);
+}

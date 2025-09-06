@@ -5,8 +5,10 @@ using Microsoft.Extensions.Options;
 
 namespace AWGBassumTelegramBot.Services
 {
-    public class CalendarScrapingService(HttpClient httpClient, ILogger<CalendarScrapingService> logger, IOptions<AppSettings> calendarConfig) : ICalendarScrapingService
+    public class CalendarScrapingService(HttpClient httpClient, ILogger<CalendarScrapingService> logger, IOptions<AppSettings> settings) : ICalendarScrapingService
     {
+        private readonly System.Globalization.CultureInfo Culture = new(settings.Value.CalendarLocale);
+
         public async Task<string> ScrapeCalendarAsync(string calendarUrl)
         {
             try
@@ -51,16 +53,14 @@ namespace AWGBassumTelegramBot.Services
                 List<CalendarEvent> futureEvents = [];
 
                 DateTime now = DateTime.UtcNow;
-                System.Globalization.CultureInfo culture = new(calendarConfig.Value.CalendarLocale);
 
                 foreach(CalendarEvent calendarEvent in calendar.Events)
                 {
-                    // calendarEvent.Start is of type CalDateTime, which has a Value property of type DateTime
                     if(calendarEvent.Start != null && calendarEvent.Start.AsUtc > now)
                     {
                         futureEvents.Add(calendarEvent);
 
-                        string formattedTime = calendarEvent.Start.Value.ToString(culture);
+                        string formattedTime = calendarEvent.Start.AsUtc.ToString("d", Culture);
 
                         logger.LogDebug("Future event: {EventSummary} at {EventStart}", calendarEvent.Summary, formattedTime);
                     }
@@ -77,6 +77,5 @@ namespace AWGBassumTelegramBot.Services
                 throw;
             }
         }
-
     }
 }
