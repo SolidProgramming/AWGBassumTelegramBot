@@ -2,6 +2,7 @@
 {
     public interface ITelegramNotificationService
     {
-        Task SendMessageAsync(string message);
+        Task<bool> SendMessageAsync(string message);
+        Task<bool> TestConnectionAsync();
     }
 }

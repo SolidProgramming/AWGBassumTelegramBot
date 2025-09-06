@@ -1,4 +1,5 @@
 ﻿using Hangfire;
+using Hangfire.Storage;
 using Ical.Net.CalendarComponents;
 using Ical.Net.DataTypes;
 using Microsoft.Extensions.Logging;
@@ -63,14 +64,18 @@ namespace AWGBassumTelegramBot.Services
             }
         }
 
-        public void ScheduleRecurringCalendarScrape(string cronExpression)
+        public async Task ScheduleRecurringCalendarScrape(string cronExpression)
         {
             RecurringJob.AddOrUpdate(
                 "calendar-scrape-job",
                 () => ExecuteCalendarScrapeJobAsync(),
                 cronExpression);
 
-            logger.LogInformation("Scheduled recurring calendar scrape job with cron: {CronExpression}", cronExpression);
+            logger.LogDebug("Scheduled recurring calendar scrape job with cron: {CronExpression}", cronExpression);
+
+            string message = NextRunInfoMessage();
+
+            await telegramNotificationService.SendMessageAsync(message);
         }
 
         private string BuildEventMessage(List<CalendarEvent> events)
@@ -100,6 +105,46 @@ namespace AWGBassumTelegramBot.Services
             messageBuilder.AppendLine($"➡ der nächste Abholtermin ist der <b>{eventTime}</b>, da wird die <b>{eventSummary}</b> abgeholt❗");
 
             return messageBuilder.ToString();
+        }
+
+        private string NextRunInfoMessage()
+        {
+            try
+            {
+                using IStorageConnection connection = JobStorage.Current.GetConnection();
+
+                // Get information about the recurring job
+                List<RecurringJobDto> recurringJobs = connection.GetRecurringJobs();
+                RecurringJobDto? calendarJob = recurringJobs.FirstOrDefault(x => x.Id == "calendar-scrape-job");
+
+                if (calendarJob == null)
+                {
+                    return "❌ No calendar scrape job is currently scheduled.";
+                }
+
+                // Get the next execution time
+                DateTime? nextExecution = calendarJob.NextExecution;
+
+                if (nextExecution.HasValue)
+                {
+                    string nextRunTime = nextExecution.Value.ToString("dd.MM.yyyy HH:mm:ss", Culture);
+                    return $"⏰ Next calendar scrape job is scheduled for: <b>{nextRunTime}</b>";
+                }
+                else
+                {
+                    return "⚠️ Calendar scrape job is scheduled but next execution time is unknown.";
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Failed to retrieve next job execution time");
+                return "❌ Error retrieving job schedule information.";
+            }
+        }
+
+        public string GetNextJobScheduleInfo()
+        {
+            return NextRunInfoMessage();
         }
     }
 }

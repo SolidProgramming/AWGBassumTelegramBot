@@ -7,29 +7,27 @@ namespace AWGBassumTelegramBot.Services
 {
     public class TelegramNotificationService(HttpClient httpClient, ILogger<TelegramNotificationService> logger, IOptions<AppSettings> settings) : ITelegramNotificationService
     {
-        private readonly AppSettings _settings = settings.Value;
-
-        public async Task SendMessageAsync(string message)
+        public async Task<bool> SendMessageAsync(string message)
         {
             try
             {
-                if(string.IsNullOrEmpty(_settings.TelegramBotToken))
+                if(string.IsNullOrEmpty(settings.Value.TelegramBotToken))
                 {
                     logger.LogWarning("Telegram bot token is not configured. Cannot send message.");
-                    return;
+                    return false;
                 }
 
-                if(_settings.TelegramChatId == 0)
+                if(settings.Value.TelegramChatId == 0)
                 {
                     logger.LogWarning("Telegram chat ID is not configured. Cannot send message.");
-                    return;
+                    return false;
                 }
 
-                string telegramApiUrl = $"https://api.telegram.org/bot{_settings.TelegramBotToken}/sendMessage";
+                string telegramApiUrl = $"https://api.telegram.org/bot{settings.Value.TelegramBotToken}/sendMessage";
 
                 var payload = new
                 {
-                    chat_id = _settings.TelegramChatId,
+                    chat_id = settings.Value.TelegramChatId,
                     text = message,
                     parse_mode = "HTML"
                 };
@@ -37,25 +35,76 @@ namespace AWGBassumTelegramBot.Services
                 string jsonPayload = JsonSerializer.Serialize(payload);
                 StringContent content = new(jsonPayload, Encoding.UTF8, "application/json");
 
-                logger.LogInformation("Sending Telegram message to chat ID: {ChatId}", _settings.TelegramChatId);
+                logger.LogInformation("Sending Telegram message to chat ID: {ChatId}", settings.Value.TelegramChatId);
 
                 HttpResponseMessage response = await httpClient.PostAsync(telegramApiUrl, content);
 
                 if(response.IsSuccessStatusCode)
                 {
-                    logger.LogInformation("Telegram message sent successfully");
+                    logger.LogDebug("Telegram message sent successfully");
                 }
                 else
                 {
                     string responseContent = await response.Content.ReadAsStringAsync();
-                    logger.LogError("Failed to send Telegram message. Status: {StatusCode}, Response: {Response}",
-                        response.StatusCode, responseContent);
+
+                    logger.LogError("Failed to send Telegram message. Status: {StatusCode}, Response: {Response}", response.StatusCode, responseContent);
                 }
+
+                return response.IsSuccessStatusCode;
             }
             catch(Exception ex)
             {
                 logger.LogError(ex, "Error occurred while sending Telegram message");
                 throw;
+            }
+        }
+
+        public async Task<bool> TestConnectionAsync()
+        {
+            try
+            {
+                if(string.IsNullOrEmpty(settings.Value.TelegramBotToken))
+                {
+                    logger.LogWarning("Telegram bot token is not configured. Cannot test connection.");
+                    return false;
+                }
+
+                string telegramApiUrl = $"https://api.telegram.org/bot{settings.Value.TelegramBotToken}/getMe";
+
+                HttpResponseMessage response = await httpClient.GetAsync(telegramApiUrl);
+
+                if(response.IsSuccessStatusCode)
+                {
+                    string responseContent = await response.Content.ReadAsStringAsync();
+
+                    logger.LogDebug("Telegram bot connection test successful: {Response}", responseContent);
+
+                    bool canSendMessage = await SendMessageAsync("❕ Test Notification");
+
+                    if(canSendMessage)
+                    {
+                        logger.LogInformation("Telegram bot is configured correctly and can send messages.");
+                    }
+                    else
+                    {
+                        logger.LogError($"Telegram bot connection test succeeded, but sending test message failed. Check your {nameof(AppSettings.TelegramChatId)}");
+                    }
+
+                    return canSendMessage;
+                }
+                else
+                {
+                    string responseContent = await response.Content.ReadAsStringAsync();
+
+                    logger.LogError("Telegram bot connection test failed. Status: {StatusCode}, Response: {Response}", response.StatusCode, responseContent);
+
+                    return false;
+                }
+            }
+            catch(Exception ex)
+            {
+                logger.LogError(ex, "Error occurred while testing Telegram bot connection");
+                return false;
             }
         }
     }

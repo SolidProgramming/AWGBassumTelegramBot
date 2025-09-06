@@ -1,6 +1,7 @@
 ﻿global using AWGBassumTelegramBot.Interfaces;
 global using AWGBassumTelegramBot.Models;
 global using AWGBassumTelegramBot.Services;
+global using AWGBassumTelegramBot.Misc;
 using Hangfire;
 using Hangfire.MemoryStorage;
 using Microsoft.Extensions.DependencyInjection;
@@ -40,14 +41,27 @@ builder.Services.AddHangfireServer();
 
 IHost app = builder.Build();
 
+ITelegramNotificationService telegramNotificationService = app.Services.GetRequiredService<ITelegramNotificationService>();
+bool botTokenValid = await telegramNotificationService.TestConnectionAsync();
+
+if(!botTokenValid)
+{
+    Console.ReadKey();
+    return;
+}
+
 IHostApplicationLifetime lifetime = app.Services.GetRequiredService<IHostApplicationLifetime>();
 
-lifetime.ApplicationStarted.Register(() =>
+lifetime.ApplicationStarted.Register(async() =>
 {
     ICalendarJobService jobService = app.Services.GetRequiredService<ICalendarJobService>();
     IOptions<AppSettings> settings = app.Services.GetRequiredService<IOptions<AppSettings>>();
 
-    if (IsValidUrl(settings.Value.CalendarUrl))
+    HttpClient httpClient = app.Services.GetRequiredService<IHttpClientFactory>().CreateClient();
+
+    bool urlIsValidAndReachable = await Helper.IsValidAndReachableUrlAsync(settings.Value.CalendarUrl, httpClient);
+
+    if (urlIsValidAndReachable)
     {
         jobService.ScheduleRecurringCalendarScrape(Cron.Daily());
         BackgroundJob.Enqueue(() => jobService.ExecuteCalendarScrapeJobAsync());
@@ -55,13 +69,3 @@ lifetime.ApplicationStarted.Register(() =>
 });
 
 await app.RunAsync();
-
-static bool IsValidUrl(string url)
-{
-    if (string.IsNullOrWhiteSpace(url))
-        return false;
-
-    return Uri.TryCreate(url, UriKind.Absolute, out Uri? result)
-           && !string.IsNullOrEmpty(result.Host)
-           && (result.Scheme == Uri.UriSchemeHttp || result.Scheme == Uri.UriSchemeHttps);
-}

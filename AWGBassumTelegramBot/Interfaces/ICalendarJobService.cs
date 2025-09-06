@@ -3,6 +3,7 @@
     public interface ICalendarJobService
     {
         Task ExecuteCalendarScrapeJobAsync();
-        void ScheduleRecurringCalendarScrape(string cronExpression);
+        Task ScheduleRecurringCalendarScrape(string cronExpression);
+        string GetNextJobScheduleInfo();
     }
 }
