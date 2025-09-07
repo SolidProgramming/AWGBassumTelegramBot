@@ -30,7 +30,8 @@ namespace AWGBassumTelegramBot.Services
                 {
                     chat_id = Settings.TelegramChatId,
                     text = message,
-                    parse_mode = "HTML"
+                    parse_mode = "HTML",
+                    disable_notification = Settings.TelegramSilentNotifications
                 };
 
                 string jsonPayload = JsonSerializer.Serialize(payload);

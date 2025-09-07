@@ -22,5 +22,8 @@ namespace AWGBassumTelegramBot.Models
 
         [JsonPropertyName("JobSchedule")]
         public string JobSchedule { get; set; } = Cron.Daily();
+
+        [JsonPropertyName("TelegramSilentNotifications")]
+        public bool TelegramSilentNotifications { get; set; }
     }
 }
