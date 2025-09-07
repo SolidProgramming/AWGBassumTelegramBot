@@ -125,7 +125,7 @@ namespace AWGBassumTelegramBot.Services
 
                 if (nextExecution.HasValue)
                 {
-                    string nextRunTime = nextExecution.Value.ToString("dd.MM", Culture);
+                    string nextRunTime = nextExecution.Value.ToString("dd.MM hh:mm", Culture);
                     return $"⏰ Next calendar scrape job is scheduled for: <b>{nextRunTime}</b>";
                 }
                 else

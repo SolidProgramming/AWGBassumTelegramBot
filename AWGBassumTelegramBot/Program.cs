@@ -63,7 +63,7 @@ lifetime.ApplicationStarted.Register(async() =>
 
     if (urlIsValidAndReachable)
     {
-        await jobService.ScheduleRecurringCalendarScrape(Cron.Daily());
+        await jobService.ScheduleRecurringCalendarScrape(settings.JobSchedule);
         BackgroundJob.Enqueue(() => jobService.ExecuteCalendarScrapeJobAsync());
     }
 });

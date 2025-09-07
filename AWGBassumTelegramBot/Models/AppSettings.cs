@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿using Hangfire;
+using System.Text.Json.Serialization;
 
 namespace AWGBassumTelegramBot.Models
 {
@@ -18,5 +19,8 @@ namespace AWGBassumTelegramBot.Models
 
         [JsonPropertyName("TelegramChatId")]
         public long TelegramChatId { get; set; }
+
+        [JsonPropertyName("JobSchedule")]
+        public string JobSchedule { get; set; } = Cron.Daily();
     }
 }
