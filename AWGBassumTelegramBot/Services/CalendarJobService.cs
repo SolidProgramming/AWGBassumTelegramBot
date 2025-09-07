@@ -1,23 +1,22 @@
 ﻿using Hangfire;
 using Hangfire.Storage;
 using Ical.Net.CalendarComponents;
-using Ical.Net.DataTypes;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 
 namespace AWGBassumTelegramBot.Services
 {
-    public class CalendarJobService(ICalendarScrapingService calendarScrapingService, ITelegramNotificationService telegramNotificationService, IOptions<AppSettings> settings, ILogger<CalendarJobService> logger) : ICalendarJobService
+    public class CalendarJobService(ICalendarScrapingService calendarScrapingService, ITelegramNotificationService telegramNotificationService, ILogger<CalendarJobService> logger) : ICalendarJobService
     {
-        private readonly System.Globalization.CultureInfo Culture = new(settings.Value.CalendarLocale);
+        private static readonly AppSettings Settings = Helper.ReadSettings<AppSettings>() ?? new AppSettings();
+        private readonly System.Globalization.CultureInfo Culture = new(Settings.CalendarLocale);
 
         public async Task ExecuteCalendarScrapeJobAsync()
         {
             try
             {
-                logger.LogInformation("Executing calendar scrape job for URL: {CalendarUrl}", settings.Value.CalendarUrl);
+                logger.LogInformation("Executing calendar scrape job for URL: {CalendarUrl}", Settings.CalendarUrl);
 
-                string calendarData = await calendarScrapingService.ScrapeCalendarAsync(settings.Value.CalendarUrl);
+                string calendarData = await calendarScrapingService.ScrapeCalendarAsync(Settings.CalendarUrl);
                 List<CalendarEvent>? futureEvents = calendarScrapingService.GetFutureCalendarEvents(calendarData);
 
                 if(futureEvents == null || futureEvents.Count == 0)
@@ -59,7 +58,7 @@ namespace AWGBassumTelegramBot.Services
             }
             catch(Exception ex)
             {
-                logger.LogError(ex, "Calendar scrape job failed for URL: {CalendarUrl}", settings.Value.CalendarUrl);
+                logger.LogError(ex, "Calendar scrape job failed for URL: {CalendarUrl}", Settings.CalendarUrl);
                 throw;
             }
         }

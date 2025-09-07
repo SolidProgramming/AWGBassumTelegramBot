@@ -14,14 +14,16 @@ HostApplicationBuilder builder = Host.CreateApplicationBuilder(args);
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 
-// Configure settings
-builder.Services.Configure<AppSettings>(
-    builder.Configuration.GetSection(AppSettings.SectionName));
+AppSettings? settings = Helper.ReadSettings<AppSettings>();
+
+if(settings is null)
+{
+    return;
+}
 
 // Register HTTP client
 builder.Services.AddHttpClient<CalendarScrapingService>((serviceProvider, client) =>
 {
-    AppSettings settings = serviceProvider.GetRequiredService<IOptions<AppSettings>>().Value;
     client.Timeout = TimeSpan.FromSeconds(settings.TimeoutSeconds);
 });
 
@@ -46,7 +48,6 @@ bool botTokenValid = await telegramNotificationService.TestConnectionAsync();
 
 if(!botTokenValid)
 {
-    Console.ReadKey();
     return;
 }
 
@@ -55,15 +56,14 @@ IHostApplicationLifetime lifetime = app.Services.GetRequiredService<IHostApplica
 lifetime.ApplicationStarted.Register(async() =>
 {
     ICalendarJobService jobService = app.Services.GetRequiredService<ICalendarJobService>();
-    IOptions<AppSettings> settings = app.Services.GetRequiredService<IOptions<AppSettings>>();
 
-    HttpClient httpClient = app.Services.GetRequiredService<IHttpClientFactory>().CreateClient();
+    using HttpClient httpClient = app.Services.GetRequiredService<IHttpClientFactory>().CreateClient();
 
-    bool urlIsValidAndReachable = await Helper.IsValidAndReachableUrlAsync(settings.Value.CalendarUrl, httpClient);
+    bool urlIsValidAndReachable = await Helper.IsValidAndReachableUrlAsync(httpClient);
 
     if (urlIsValidAndReachable)
     {
-        jobService.ScheduleRecurringCalendarScrape(Cron.Daily());
+        await jobService.ScheduleRecurringCalendarScrape(Cron.Daily());
         BackgroundJob.Enqueue(() => jobService.ExecuteCalendarScrapeJobAsync());
     }
 });

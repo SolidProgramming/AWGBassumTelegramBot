@@ -5,9 +5,10 @@ using Microsoft.Extensions.Options;
 
 namespace AWGBassumTelegramBot.Services
 {
-    public class CalendarScrapingService(HttpClient httpClient, ILogger<CalendarScrapingService> logger, IOptions<AppSettings> settings) : ICalendarScrapingService
+    public class CalendarScrapingService(HttpClient httpClient, ILogger<CalendarScrapingService> logger) : ICalendarScrapingService
     {
-        private readonly System.Globalization.CultureInfo Culture = new(settings.Value.CalendarLocale);
+        private static readonly AppSettings Settings = Helper.ReadSettings<AppSettings>() ?? new AppSettings();
+        private readonly System.Globalization.CultureInfo Culture = new(Settings.CalendarLocale);
 
         public async Task<string> ScrapeCalendarAsync(string calendarUrl)
         {

@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk;Microsoft.NET.Sdk.Publish">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -6,6 +6,11 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    <EnableSdkContainerDebugging>True</EnableSdkContainerDebugging>
+    <ContainerBaseImage>mcr.microsoft.com/dotnet/runtime:9.0</ContainerBaseImage>
+    <IsPublishable>True</IsPublishable>
+    <EnableSdkContainerSupport>True</EnableSdkContainerSupport>
+	<InvariantGlobalization>false</InvariantGlobalization>
   </PropertyGroup>
 
   <ItemGroup>
@@ -26,10 +31,14 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Remove="appdata\settings.json" />
     <None Remove="appsettings.json" />
   </ItemGroup>
 
   <ItemGroup>
+    <Content Include="appdata\settings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="appsettings.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

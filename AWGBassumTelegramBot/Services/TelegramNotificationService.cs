@@ -1,33 +1,34 @@
 ﻿using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using System.Text;
 using System.Text.Json;
 
 namespace AWGBassumTelegramBot.Services
 {
-    public class TelegramNotificationService(HttpClient httpClient, ILogger<TelegramNotificationService> logger, IOptions<AppSettings> settings) : ITelegramNotificationService
+    public class TelegramNotificationService(HttpClient httpClient, ILogger<TelegramNotificationService> logger) : ITelegramNotificationService
     {
+        private static readonly AppSettings Settings = Helper.ReadSettings<AppSettings>() ?? new AppSettings();
+
         public async Task<bool> SendMessageAsync(string message)
         {
             try
             {
-                if(string.IsNullOrEmpty(settings.Value.TelegramBotToken))
+                if(string.IsNullOrEmpty(Settings.TelegramBotToken))
                 {
                     logger.LogWarning("Telegram bot token is not configured. Cannot send message.");
                     return false;
                 }
 
-                if(settings.Value.TelegramChatId == 0)
+                if(Settings.TelegramChatId == 0)
                 {
                     logger.LogWarning("Telegram chat ID is not configured. Cannot send message.");
                     return false;
                 }
 
-                string telegramApiUrl = $"https://api.telegram.org/bot{settings.Value.TelegramBotToken}/sendMessage";
+                string telegramApiUrl = $"https://api.telegram.org/bot{Settings.TelegramBotToken}/sendMessage";
 
                 var payload = new
                 {
-                    chat_id = settings.Value.TelegramChatId,
+                    chat_id = Settings.TelegramChatId,
                     text = message,
                     parse_mode = "HTML"
                 };
@@ -35,7 +36,7 @@ namespace AWGBassumTelegramBot.Services
                 string jsonPayload = JsonSerializer.Serialize(payload);
                 StringContent content = new(jsonPayload, Encoding.UTF8, "application/json");
 
-                logger.LogInformation("Sending Telegram message to chat ID: {ChatId}", settings.Value.TelegramChatId);
+                logger.LogInformation("Sending Telegram message to chat ID: {ChatId}", Settings.TelegramChatId);
 
                 HttpResponseMessage response = await httpClient.PostAsync(telegramApiUrl, content);
 
@@ -63,13 +64,13 @@ namespace AWGBassumTelegramBot.Services
         {
             try
             {
-                if(string.IsNullOrEmpty(settings.Value.TelegramBotToken))
+                if(string.IsNullOrEmpty(Settings.TelegramBotToken))
                 {
                     logger.LogWarning("Telegram bot token is not configured. Cannot test connection.");
                     return false;
                 }
 
-                string telegramApiUrl = $"https://api.telegram.org/bot{settings.Value.TelegramBotToken}/getMe";
+                string telegramApiUrl = $"https://api.telegram.org/bot{Settings.TelegramBotToken}/getMe";
 
                 HttpResponseMessage response = await httpClient.GetAsync(telegramApiUrl);
 
