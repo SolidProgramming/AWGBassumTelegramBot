@@ -8,7 +8,7 @@ namespace AWGBassumTelegramBot.Services
     {
         private static readonly AppSettings Settings = Helper.ReadSettings<AppSettings>() ?? new AppSettings();
 
-        public async Task<bool> SendMessageAsync(string message)
+        public async Task<bool> SendMessageAsync(string message, bool sentSilentTestMessage = true)
         {
             try
             {
@@ -31,7 +31,7 @@ namespace AWGBassumTelegramBot.Services
                     chat_id = Settings.TelegramChatId,
                     text = message,
                     parse_mode = "HTML",
-                    disable_notification = Settings.TelegramSilentNotifications
+                    disable_notification = Settings.TelegramSilentNotifications || sentSilentTestMessage
                 };
 
                 string jsonPayload = JsonSerializer.Serialize(payload);
@@ -75,13 +75,13 @@ namespace AWGBassumTelegramBot.Services
 
                 HttpResponseMessage response = await httpClient.GetAsync(telegramApiUrl);
 
+                string responseContent = await response.Content.ReadAsStringAsync();
+
                 if(response.IsSuccessStatusCode)
                 {
-                    string responseContent = await response.Content.ReadAsStringAsync();
-
                     logger.LogDebug("Telegram bot connection test successful: {Response}", responseContent);
 
-                    bool canSendMessage = await SendMessageAsync("❕ Test Notification");
+                    bool canSendMessage = await SendMessageAsync("❕ Test Notification", sentSilentTestMessage: true);
 
                     if(canSendMessage)
                     {
@@ -94,14 +94,10 @@ namespace AWGBassumTelegramBot.Services
 
                     return canSendMessage;
                 }
-                else
-                {
-                    string responseContent = await response.Content.ReadAsStringAsync();
 
-                    logger.LogError("Telegram bot connection test failed. Status: {StatusCode}, Response: {Response}", response.StatusCode, responseContent);
+                logger.LogError("Telegram bot connection test failed. Status: {StatusCode}, Response: {Response}", response.StatusCode, responseContent);
 
-                    return false;
-                }
+                return false;
             }
             catch(Exception ex)
             {
