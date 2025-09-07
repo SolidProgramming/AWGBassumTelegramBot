@@ -8,7 +8,7 @@ namespace AWGBassumTelegramBot.Services
     {
         private static readonly AppSettings Settings = Helper.ReadSettings<AppSettings>() ?? new AppSettings();
 
-        public async Task<bool> SendMessageAsync(string message, bool sentSilentTestMessage = true)
+        public async Task<bool> SendMessageAsync(string message, bool isTestMessage = false)
         {
             try
             {
@@ -31,7 +31,7 @@ namespace AWGBassumTelegramBot.Services
                     chat_id = Settings.TelegramChatId,
                     text = message,
                     parse_mode = "HTML",
-                    disable_notification = Settings.TelegramSilentNotifications || sentSilentTestMessage
+                    disable_notification = Settings.TelegramSilentNotifications || isTestMessage
                 };
 
                 string jsonPayload = JsonSerializer.Serialize(payload);
@@ -81,7 +81,7 @@ namespace AWGBassumTelegramBot.Services
                 {
                     logger.LogDebug("Telegram bot connection test successful: {Response}", responseContent);
 
-                    bool canSendMessage = await SendMessageAsync("❕ Test Notification", sentSilentTestMessage: true);
+                    bool canSendMessage = await SendMessageAsync("❕ Test Notification", isTestMessage: true);
 
                     if(canSendMessage)
                     {
