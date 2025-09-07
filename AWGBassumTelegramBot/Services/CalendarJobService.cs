@@ -83,7 +83,7 @@ namespace AWGBassumTelegramBot.Services
 
             foreach(CalendarEvent calendarEvent in events)
             {
-                string eventTime = calendarEvent.Start?.AsUtc.ToString("d", Culture) ?? "Unknown time";
+                string eventTime = calendarEvent.Start?.AsUtc.ToString("dd.MM", Culture) ?? "Unknown time";
                 string eventSummary = calendarEvent.Summary ?? "No title";
 
                 messageBuilder.AppendLine($"⏰ <b>ACHTUNG:</b>{Environment.NewLine}");
@@ -97,10 +97,10 @@ namespace AWGBassumTelegramBot.Services
         {
             System.Text.StringBuilder messageBuilder = new();
 
-            string eventTime = nextEvent.Start?.AsUtc.ToString("d", Culture) ?? "Unknown time";
+            string eventTime = nextEvent.Start?.AsUtc.ToString("dd.MM", Culture) ?? "Unknown time";
             string eventSummary = nextEvent.Summary ?? "No title";
 
-            messageBuilder.AppendLine($"✅ Es sind keine Abholtermine für den <b>{nextDay.ToString("d", Culture)}</b> eingetragen.{Environment.NewLine}");
+            messageBuilder.AppendLine($"✅ Es sind keine Abholtermine für den <b>{nextDay.ToString("dd.MM", Culture)}</b> eingetragen.{Environment.NewLine}");
             messageBuilder.AppendLine($"➡ der nächste Abholtermin ist der <b>{eventTime}</b>, da wird die <b>{eventSummary}</b> abgeholt❗");
 
             return messageBuilder.ToString();
@@ -126,7 +126,7 @@ namespace AWGBassumTelegramBot.Services
 
                 if (nextExecution.HasValue)
                 {
-                    string nextRunTime = nextExecution.Value.ToString("dd.MM.yyyy HH:mm:ss", Culture);
+                    string nextRunTime = nextExecution.Value.ToString("dd.MM", Culture);
                     return $"⏰ Next calendar scrape job is scheduled for: <b>{nextRunTime}</b>";
                 }
                 else

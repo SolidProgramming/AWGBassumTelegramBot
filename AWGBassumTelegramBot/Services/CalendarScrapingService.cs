@@ -61,7 +61,7 @@ namespace AWGBassumTelegramBot.Services
                     {
                         futureEvents.Add(calendarEvent);
 
-                        string formattedTime = calendarEvent.Start.AsUtc.ToString("d", Culture);
+                        string formattedTime = calendarEvent.Start.AsUtc.ToString("dd.MM", Culture);
 
                         logger.LogDebug("Future event: {EventSummary} at {EventStart}", calendarEvent.Summary, formattedTime);
                     }
