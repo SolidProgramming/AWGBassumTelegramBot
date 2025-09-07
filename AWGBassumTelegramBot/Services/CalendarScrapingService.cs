@@ -14,7 +14,7 @@ namespace AWGBassumTelegramBot.Services
         {
             try
             {
-                logger.LogInformation("Starting to scrape calendar from: {CalendarUrl}", calendarUrl);
+                logger.LogDebug("Starting to scrape calendar from: {CalendarUrl}", calendarUrl);
 
                 HttpResponseMessage response = await httpClient.GetAsync(calendarUrl);
                 response.EnsureSuccessStatusCode();
@@ -41,7 +41,7 @@ namespace AWGBassumTelegramBot.Services
         {
             try
             {
-                logger.LogInformation("Processing calendar data...");
+                logger.LogDebug("Processing calendar data...");
 
                 Calendar? calendar = Calendar.Load(calendarData);
 

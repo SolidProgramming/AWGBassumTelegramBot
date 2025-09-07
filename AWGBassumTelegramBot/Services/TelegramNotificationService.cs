@@ -36,7 +36,7 @@ namespace AWGBassumTelegramBot.Services
                 string jsonPayload = JsonSerializer.Serialize(payload);
                 StringContent content = new(jsonPayload, Encoding.UTF8, "application/json");
 
-                logger.LogInformation("Sending Telegram message to chat ID: {ChatId}", Settings.TelegramChatId);
+                logger.LogDebug("Sending Telegram message to chat ID: {ChatId}", Settings.TelegramChatId);
 
                 HttpResponseMessage response = await httpClient.PostAsync(telegramApiUrl, content);
 
@@ -84,7 +84,7 @@ namespace AWGBassumTelegramBot.Services
 
                     if(canSendMessage)
                     {
-                        logger.LogInformation("Telegram bot is configured correctly and can send messages.");
+                        logger.LogDebug("Telegram bot is configured correctly and can send messages.");
                     }
                     else
                     {

@@ -14,7 +14,7 @@ namespace AWGBassumTelegramBot.Services
         {
             try
             {
-                logger.LogInformation("Executing calendar scrape job for URL: {CalendarUrl}", Settings.CalendarUrl);
+                logger.LogDebug("Executing calendar scrape job for URL: {CalendarUrl}", Settings.CalendarUrl);
 
                 string calendarData = await calendarScrapingService.ScrapeCalendarAsync(Settings.CalendarUrl);
                 List<CalendarEvent>? futureEvents = calendarScrapingService.GetFutureCalendarEvents(calendarData);
@@ -32,7 +32,7 @@ namespace AWGBassumTelegramBot.Services
 
                 if(eventsOnNextDay.Count > 0)
                 {
-                    logger.LogInformation("There is at least one calendar event on the next day: {NextDay}", nextDay);
+                    logger.LogDebug("There is at least one calendar event on the next day: {NextDay}", nextDay);
 
                     string? message = BuildEventMessage(eventsOnNextDay);
 
@@ -54,7 +54,7 @@ namespace AWGBassumTelegramBot.Services
                     await telegramNotificationService.SendMessageAsync(message);
                 }
 
-                logger.LogInformation("Calendar scrape job completed successfully");
+                logger.LogDebug("Calendar scrape job completed successfully");
             }
             catch(Exception ex)
             {
@@ -70,7 +70,7 @@ namespace AWGBassumTelegramBot.Services
                 () => ExecuteCalendarScrapeJobAsync(),
                 cronExpression);
 
-            logger.LogDebug("Scheduled recurring calendar scrape job with cron: {CronExpression}", cronExpression);
+            logger.LogInformation("Scheduled recurring calendar scrape job with cron: {CronExpression}", cronExpression);
 
             string message = NextRunInfoMessage();
 
@@ -81,12 +81,13 @@ namespace AWGBassumTelegramBot.Services
         {
             System.Text.StringBuilder messageBuilder = new();
 
+            messageBuilder.AppendLine($"⏰ <b>ACHTUNG:</b>{Environment.NewLine}");
+
             foreach(CalendarEvent calendarEvent in events)
             {
                 string eventTime = calendarEvent.Start?.AsUtc.ToString("dd.MM", Culture) ?? "Unknown time";
                 string eventSummary = calendarEvent.Summary ?? "No title";
 
-                messageBuilder.AppendLine($"⏰ <b>ACHTUNG:</b>{Environment.NewLine}");
                 messageBuilder.AppendLine($"am <b>{eventTime}</b> wird die <b>{eventSummary}</b> abgeholt❗");
             }
 
@@ -112,7 +113,6 @@ namespace AWGBassumTelegramBot.Services
             {
                 using IStorageConnection connection = JobStorage.Current.GetConnection();
 
-                // Get information about the recurring job
                 List<RecurringJobDto> recurringJobs = connection.GetRecurringJobs();
                 RecurringJobDto? calendarJob = recurringJobs.FirstOrDefault(x => x.Id == "calendar-scrape-job");
 
@@ -121,7 +121,6 @@ namespace AWGBassumTelegramBot.Services
                     return "❌ No calendar scrape job is currently scheduled.";
                 }
 
-                // Get the next execution time
                 DateTime? nextExecution = calendarJob.NextExecution;
 
                 if (nextExecution.HasValue)
