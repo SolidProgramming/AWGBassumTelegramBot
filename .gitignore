@@ -34,3 +34,5 @@ msbuild.wrn
 .vs/
 /appsettings.json
 /AWGBassumTelegramBot/appsettings.json
+/AWGBassumTelegramBot/appsettings.Development.json
+/AWGBassumTelegramBot/appdata/settings.json
