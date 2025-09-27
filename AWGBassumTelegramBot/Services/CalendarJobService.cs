@@ -102,7 +102,7 @@ namespace AWGBassumTelegramBot.Services
             string eventSummary = nextEvent.Summary ?? "No title";
 
             messageBuilder.AppendLine($"✅ Es sind keine Abholtermine für den <b>{nextDay.ToString("dd.MM", Culture)}</b> eingetragen.{Environment.NewLine}");
-            messageBuilder.AppendLine($"➡ der nächste Abholtermin ist der <b>{eventTime}</b>, da wird die <b>{eventSummary}</b> abgeholt❗");
+            messageBuilder.AppendLine($"➡ der nächste Abholtermin ist der <b>{eventTime}</b>, da wird <b>{eventSummary}</b> abgeholt❗");
 
             return messageBuilder.ToString();
         }
